@@ -1,98 +1,236 @@
-# Prestamos de equipos UNICAH
 
--Programación de Negocios · Odoo 20.0
--Estudiante: José Carlos Cáceres Girón
--Cuenta: 0703-2006-03787
+# Préstamos de Equipos UNICAH
 
-El módulo `prestamo_unicah` registra el inventario de equipos de la universidad, los préstamos a estudiantes y docentes y la devolución de los equipos.
+**Asignatura:** Programación de Negocios  
+**Plataforma:** Odoo 20.0  
+**Estudiante:** José Carlos Cáceres Girón  
+**Número de cuenta:** 0703-2006-03787  
 
-## Requisitos y ejecución
+## Descripción del proyecto
 
-Windows 11, código fuente de Odoo 20.0, Python del entorno virtual de Odoo y PostgreSQL local. El módulo depende de `mail`. Se usa una base independiente, `practica_prestamos_db`.
+En esta práctica desarrollé el módulo `prestamo_unicah` para administrar los préstamos de equipos de la universidad utilizando Odoo 20.0.
 
-En PowerShell, verifica primero que el nombre de la base esté libre antes de instalar por primera vez. La configuración local debe apuntar al servidor PostgreSQL correcto. Usa la carpeta que contiene el módulo en `--addons-path`.
+El sistema permite registrar equipos como laptops, proyectores y dispositivos de audio, gestionar préstamos a estudiantes y docentes, controlar las fechas de devolución y consultar el estado de los equipos.
+
+El trabajo se realizó siguiendo los seis pasos de la guía proporcionada en clase. También se desarrollaron los cuatro retos adicionales.
+
+## 1. Requisitos e instalación
+
+Para desarrollar y probar el módulo utilicé:
+
+- Windows 11.
+- Odoo 20.0.
+- Python y el entorno virtual de Odoo.
+- PostgreSQL.
+- Visual Studio Code.
+- Git y GitHub.
+
+**Módulo:** `prestamo_unicah`  
+**Base de datos:** `practica_prestamos_db`  
+**Dependencia:** `mail`
+
+El módulo se encuentra dentro de la carpeta `prestamo_unicah` de este repositorio.
+
+### Ejecución en PowerShell
+
+Los siguientes comandos corresponden a la configuración utilizada en mi computadora. Las rutas deben adaptarse si se instala el proyecto en otro equipo.
 
 ```powershell
 Set-Location C:/OdooFuente/odoo
+
 $opciones = @(
     '-c', 'C:/OdooFuente/odoo/odoo_pg18.conf',
     '--addons-path=C:/OdooFuente/odoo/addons,C:/OdooFuente/practica_prestamos',
     '--data-dir=C:/OdooFuente/practica_prestamos/odoo-data',
     '-d', 'practica_prestamos_db',
     '--db-filter=^practica_prestamos_db$',
-    '--http-interface=127.0.0.1', '--http-port=8078'
+    '--http-interface=127.0.0.1',
+    '--http-port=8078'
 )
+```
+
+Para instalar el módulo por primera vez:
+
+```powershell
 & ./.venv/Scripts/python.exe -B odoo-bin @opciones -i prestamo_unicah --stop-after-init --no-http
+```
+
+Para actualizarlo después de realizar cambios:
+
+```powershell
 & ./.venv/Scripts/python.exe -B odoo-bin @opciones -u prestamo_unicah --stop-after-init --no-http
+```
+
+Para iniciar Odoo:
+
+```powershell
 & ./.venv/Scripts/python.exe -B odoo-bin @opciones
 ```
 
-Usa `-i` en la instalación inicial y `-u` para cargar cambios en una instalación existente. Abre [Odoo local](http://127.0.0.1:8078/odoo?db=practica_prestamos_db) e inicia sesión con un usuario interno.
-Como usuario: admin y contraseña: admin
+Una vez iniciado, se puede acceder desde:
 
-Verificación
+http://127.0.0.1:8078/odoo?db=practica_prestamos_db
 
-1. En Préstamos → Equipos, revisa los cuatro equipos iniciales y crea el micrófono `AUD-002`. Cambia a lista para comparar los campos de cada equipo.
-2. En Préstamos → Préstamos, crea **Clase de Redes** con un contacto, dos equipos y fechas separadas por tres días. Comprueba la cantidad, los días y la categoría de cada línea.
-3. Pulsa Prestar, revisa los estados de los equipos y el chatter. Pulsa **Devolver** y confirma que los equipos vuelven a estar disponibles.
-4. Prueba una devolución anterior a la entrega, un estudiante por diez días, un equipo duplicado, un estudiante con tres equipos e intenta prestar un borrador cuyo equipo pasó a mantenimiento. Luego presta tres equipos a un docente por diez días.
-5. Revisa el historial del contacto, las columnas del kanban y los filtros y agrupaciones del menú de búsqueda. Activos incluye Prestado y Atrasado. Atrasados usa el estado Atrasado.
-6. Ejecuta la suite de Odoo sobre la base de la práctica.
+El acceso se realiza con el usuario administrador configurado en la base de datos de la práctica.
+Usuario: admin | Contraseña: admin
+
+## 2. Desarrollo de la práctica
+
+### Paso 1. Catálogo de equipos
+
+Se creó el modelo `prestamo.equipo` para registrar los equipos que pueden ser prestados.
+Cada equipo tiene su nombre, código, categoría, estado y disponibilidad. También se configuraron los permisos y las vistas necesarias para administrar los registros.
+Se agregaron cuatro equipos iniciales y posteriormente se creó un micrófono con el código `AUD-002` para comprobar el funcionamiento del formulario.
+
+### Paso 2. Registro de préstamos
+
+Se creó el modelo `prestamo.prestamo` para registrar las solicitudes de préstamo.
+Cada registro permite indicar el solicitante, el tipo de solicitante, las fechas y el estado del préstamo.
+También se incorporó el chatter de Odoo para guardar el historial de los cambios realizados.
+
+### Paso 3. Equipos del préstamo
+
+Se creó el modelo `prestamo.linea`, que permite relacionar varios equipos con un mismo préstamo.
+Se configuraron las relaciones entre modelos y los campos calculados para mostrar la cantidad total de equipos y los días del préstamo.
+Para comprobarlo, se creó el préstamo **Clase de Redes**, agregando dos laptops y estableciendo un período de tres días.
+
+### Paso 4. Flujo de estados
+
+Se implementaron los botones **Prestar** y **Devolver**.
+Al prestar un equipo, su estado cambia a Prestado. Cuando se devuelve, vuelve a estar Disponible.
+Los cambios también quedan registrados en el historial del préstamo.
+
+### Paso 5. Reglas del préstamo
+
+Se implementaron las validaciones solicitadas para evitar registros incorrectos:
+
+- La fecha de devolución no puede ser anterior a la fecha del préstamo.
+- Un estudiante no puede solicitar un préstamo por más de siete días.
+- Un equipo no puede agregarse dos veces al mismo préstamo.
+- Un estudiante no puede solicitar más de dos equipos.
+- No se puede prestar un equipo que ya está prestado o se encuentra en mantenimiento.
+
+También se comprobó el caso permitido de un docente que solicita tres equipos durante diez días.
+
+### Paso 6. Contactos, kanban y búsqueda
+
+Se agregó una sección en los contactos para consultar sus préstamos anteriores.
+También se configuró la vista kanban de equipos, organizada por estados, y se incorporaron los filtros de préstamos activos y atrasados.
+Finalmente, se agregaron las opciones para agrupar los préstamos por estado y por solicitante.
+
+## 3. Respuestas a las preguntas de la guía
+
+### Paso 1. Catálogo de equipos
+
+**1. ¿Qué pasa cuando se desmarca Activo? ¿Por qué es mejor que borrar?**
+
+El equipo queda archivado y deja de aparecer en las búsquedas normales. Es mejor que eliminarlo porque permite conservar la información y el historial de los préstamos anteriores.
+
+**2. ¿Para qué sirve `copy=False` en `codigo`?**
+
+Evita que se copie el mismo código al duplicar un equipo. De esta manera, el nuevo equipo debe recibir su propio código y no se repite el del registro original.
+
+### Paso 2. Registro de préstamos
+
+**1. ¿Qué hacen `_name` y `_inherit` en este modelo?**
+
+`_name` define el nombre del modelo que estamos creando. En cambio, `_inherit` permite incorporar funciones de otro modelo, como el historial de mensajes de `mail.thread`.
+
+**2. ¿Qué hace `tracking=True` en `state`?**
+
+Permite que Odoo registre automáticamente los cambios de estado en el chatter del préstamo.
+
+### Paso 3. Equipos del préstamo
+
+**1. ¿Qué indica cada parámetro de `fields.One2many("prestamo.linea", "prestamo_id")`?**
+
+`prestamo.linea` indica el modelo que contiene los equipos asociados al préstamo, mientras que `prestamo_id` es el campo que relaciona cada línea con su préstamo.
+
+**2. ¿Qué pasa con las líneas al borrar un préstamo? ¿Dónde se define?**
+
+Si se elimina un préstamo en borrador, también se eliminan sus líneas. Esto se configura mediante `ondelete="cascade"` en el campo `prestamo_id`.
+
+### Paso 4. Flujo de estados
+
+**1. ¿Por qué los métodos vuelven a validar el estado?**
+
+Porque el estado puede cambiar antes de ejecutar una operación. Al comprobarlo nuevamente, evitamos prestar o devolver equipos cuando no corresponde.
+
+**2. ¿Qué hace `prestamo.linea_ids.equipo_id.write(...)`? ¿Por qué no necesita un bucle?**
+
+Permite actualizar los equipos relacionados con el préstamo. No necesita un bucle porque Odoo puede modificar varios registros al mismo tiempo utilizando `write()`.
+
+### Paso 5. Reglas del préstamo
+
+**1. ¿Por qué hace falta volver a comprobar disponibilidad?**
+
+Porque un equipo puede cambiar de estado después de seleccionarlo. Por ejemplo, podría prestarse a otra persona o enviarse a mantenimiento. Por eso se comprueba nuevamente antes de confirmar el préstamo.
+
+**2. ¿Cuándo se ejecutan `@api.constrains` y la validación de `action_prestar`?**
+
+`@api.constrains` comprueba las restricciones cuando se crean o modifican los campos correspondientes. La validación de `action_prestar` se ejecuta cuando se utiliza la acción de prestar, antes de cambiar el estado de los equipos.
+
+### Paso 6. Contacto, kanban y búsqueda
+
+**1. ¿Qué pasa si se arrastra una tarjeta a otra columna? ¿Por qué?**
+
+En una vista kanban normalmente se puede cambiar el estado de un registro al moverlo a otra columna. En esta práctica se deshabilitó esa opción para que los equipos pasen a Prestado únicamente mediante el proceso de préstamo.
+
+**2. ¿Se crea una columna en la tabla de contactos para `prestamo_ids`?**
+
+No. La relación se obtiene mediante el campo `partner_id`, que se encuentra en los registros de préstamos y permite identificar a qué contacto pertenece cada uno.
+
+## 4. Retos adicionales
+
+Después de completar los seis pasos principales, también se desarrollaron los cuatro retos de la guía.
+
+**Reto 1. Marcar préstamos atrasados**
+
+Se agregó la opción de marcar un préstamo como Atrasado cuando se supera la fecha de devolución. El cambio queda registrado en el historial y los equipos continúan prestados hasta que sean devueltos.
+
+**Reto 2. Colores en la lista**
+
+Se utilizaron colores para identificar más fácilmente los estados de los préstamos. Los atrasados aparecen en rojo y los devueltos en gris.
+
+**Reto 3. Veces prestado**
+
+Se agregó un contador que muestra cuántas veces aparece un equipo en los registros de préstamos, incluyendo los borradores.
+
+**Reto 4. Mantenimiento**
+
+Se incorporó la opción de enviar equipos disponibles a mantenimiento y devolverlos posteriormente al estado Disponible.
+Mientras un equipo está prestado, el sistema impide cambiarlo directamente a mantenimiento.
+
+## 5. Pruebas realizadas
+
+Durante la práctica se comprobó el funcionamiento de los modelos, formularios, relaciones, botones, filtros y restricciones.
+
+Entre las pruebas realizadas estuvieron:
+
+- Crear y consultar equipos.
+- Registrar préstamos con varios equipos.
+- Calcular la cantidad de equipos y los días de préstamo.
+- Prestar y devolver equipos.
+- Comprobar los cambios de estado en el chatter.
+- Intentar préstamos que incumplen las reglas.
+- Consultar los préstamos desde los contactos.
+- Utilizar la vista kanban y los filtros de búsqueda.
+- Comprobar los cuatro retos adicionales.
+
+También se ejecutaron pruebas automatizadas de Odoo.
+
+**Resultado final reportado:** 11 pruebas ejecutadas, sin fallos ni errores.
+
+Para ejecutar las pruebas:
 
 ```powershell
 & ./.venv/Scripts/python.exe -B odoo-bin @opciones -u prestamo_unicah --test-tags=/prestamo_unicah --stop-after-init
 ```
 
-Respuestas
+## 6. Conclusión
 
-### Paso 1 · Catálogo de equipos
+Esta práctica me permitió comprender mejor cómo se crean módulos personalizados en Odoo y cómo se relacionan diferentes modelos para desarrollar una funcionalidad completa.
 
-1. ¿Qué pasa cuando se desmarca Activo? ¿Por qué es mejor que borrar? El equipo queda archivado y sale de las búsquedas normales. Conserva su registro y las referencias de préstamos anteriores.
-2. ¿Para qué sirve `copy=False` en `codigo`? Al duplicar el equipo, Odoo omite el código original. Debe asignarse un código al nuevo equipo porque el campo es obligatorio.
-
-### Paso 2 · Registro de préstamos
-
-1. ¿Qué hacen `_name` y `_inherit` en este modelo? `_name` registra el modelo nuevo `prestamo.prestamo`. `_inherit` incorpora las funciones de mensajería de `mail.thread`.
-2. ¿Qué hace `tracking=True` en `state`? Registra los cambios de estado en el chatter con el valor anterior y el nuevo.
-
-### Paso 3 · Equipos del préstamo
-
-1. ¿Qué indica cada parámetro de `fields.One2many("prestamo.linea", "prestamo_id")`? El primero identifica el modelo de líneas. El segundo es el campo inverso que apunta al préstamo.
-2. ¿Qué pasa con las líneas al borrar un préstamo? ¿Dónde se define? Al borrar un borrador, PostgreSQL elimina sus líneas por `ondelete="cascade"` en `prestamo_id`. Los préstamos que ya salieron de borrador conservan su historial.
-
-### Paso 4 · Flujo de estados
-
-1. ¿Por qué los métodos vuelven a validar el estado? Un método también puede invocarse por RPC, y otra transacción puede haber cambiado el estado desde que se abrió el formulario. La validación aplica al estado que el servidor procesa.
-2. ¿Qué hace `prestamo.linea_ids.equipo_id.write(...)`? ¿Por qué no necesita un bucle? La navegación por las relaciones produce un conjunto de equipos y `write` modifica todo el conjunto. El módulo usa ese mismo mecanismo en el método privado que actualiza el estado.
-
-### Paso 5 · Reglas del préstamo
-
-1. ¿Por qué hace falta volver a comprobar disponibilidad? El dominio limita lo que ofrece el selector. Entre guardar y prestar, un equipo puede entrar en mantenimiento o quedar asignado a otro préstamo. Al prestar se bloquean los registros y se revisa que sigan disponibles.
-2. ¿Cuándo se ejecutan `@api.constrains` y la validación de `action_prestar`? Odoo invoca la restricción de fechas al crear o escribir con los campos declarados. La validación de cantidad y disponibilidad corre al invocar Prestar. La unicidad en PostgreSQL también protege las escrituras que llegan directamente al modelo de líneas.
-
-### Paso 6 · Contacto, kanban y búsqueda
-
-1. ¿Qué pasa si se arrastra una tarjeta a otra columna? ¿Por qué? En un kanban agrupado y arrastrable, mover una tarjeta escribe el campo de agrupación. Aquí se deshabilitó el arrastre para que el estado Prestado se gestione con el flujo del préstamo.
-2. ¿Se crea una columna en la tabla de contactos para `prestamo_ids`? La relación se consulta a través de `partner_id`, la clave foránea que se almacena en la tabla de préstamos.
-
-## Ajustes a la guía
-
-- Se pasa `addons_path` desde la línea de comandos y se usa un directorio de datos dedicado a esta práctica.
-- Se aplica la unicidad del equipo por préstamo en PostgreSQL. Así también se validan las ediciones directas de líneas.
-- Los métodos bloquean los registros durante las transiciones. Las restricciones del servidor protegen estados y líneas incluso si se editan por RPC. El kanban se mantiene como vista de consulta por estado.
-- Se conserva el formato `ir.access.csv` de la guía, que usa el código fuente instalado de Odoo 20.0.
-
-## Resultados
-
-La instalación inicial y la actualización de `prestamo_unicah` cargaron en Odoo 20.0 sobre `practica_prestamos_db`. La suite ejecutó ocho pruebas con cero fallos y cero errores. Validó los tres modelos, la creación de equipos con un usuario interno, la carga XML, relaciones y cálculos, el flujo y el chatter, cinco casos inválidos, el caso docente y la configuración de las vistas y búsquedas.
-
-En el navegador se creó el micrófono `AUD-002` y se prestaron y devolvieron dos equipos en Clase de Redes. Se verificaron el chatter, el historial del contacto, el kanban con cinco equipos, los dos filtros y las dos agrupaciones.
-
-## Retos
-
-- Marcar atrasado. Un préstamo en Prestado se puede marcar Atrasado cuando ya pasó la fecha de devolución. El chatter conserva el cambio y los equipos permanecen prestados hasta que se devuelvan.
-- Colores en la lista. Los préstamos atrasados se distinguen en rojo y los devueltos en gris.
-- Veces prestado. El formulario y la tarjeta de cada equipo muestran cuántos préstamos lo incluyen, incluidos los borradores.
-- Mantenimiento. El formulario permite enviar equipos disponibles a mantenimiento y devolverlos a Disponible. El servidor bloquea el cambio mientras el equipo esté prestado.
-
-La suite final, con los cuatro retos cargados, ejecutó once pruebas con cero fallos y cero errores. Añadió comprobaciones para el vencimiento, el conteo de préstamos por equipo y la protección del estado durante mantenimiento.
+También pude trabajar con vistas, permisos, campos calculados, validaciones y cambios de estado.
+El resultado es un módulo que permite llevar un control básico de los equipos universitarios y sus préstamos, aplicando las reglas establecidas en la guía.
+El proyecto se encuentra publicado en GitHub, con los commits correspondientes a cada uno de los seis pasos y a los cuatro retos adicionales.
