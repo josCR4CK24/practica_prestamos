@@ -61,3 +61,9 @@ class PrestamoEquipo(models.Model):
 
     def _set_estado_prestamo(self, estado):
         return super().write({"estado": estado})
+
+    def action_mantenimiento(self):
+        return self.write({"estado": "mantenimiento"})
+
+    def action_disponible(self):
+        return self.write({"estado": "disponible"})

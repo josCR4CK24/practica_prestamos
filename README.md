@@ -92,3 +92,6 @@ En el navegador se creó el micrófono `AUD-002` y se prestaron y devolvieron do
 - **Marcar atrasado.** Un préstamo en Prestado se puede marcar Atrasado cuando ya pasó la fecha de devolución. El chatter conserva el cambio y los equipos permanecen prestados hasta que se devuelvan.
 - **Colores en la lista.** Los préstamos atrasados se distinguen en rojo y los devueltos en gris.
 - **Veces prestado.** El formulario y la tarjeta de cada equipo muestran cuántos préstamos lo incluyen, incluidos los borradores.
+- **Mantenimiento.** El formulario permite enviar equipos disponibles a mantenimiento y devolverlos a Disponible. El servidor bloquea el cambio mientras el equipo esté prestado.
+
+La suite final, con los cuatro retos cargados, ejecutó once pruebas con cero fallos y cero errores. Añadió comprobaciones para el vencimiento, el conteo de préstamos por equipo y la protección del estado durante mantenimiento.

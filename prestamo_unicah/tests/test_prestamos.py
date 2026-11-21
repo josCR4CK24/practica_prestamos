@@ -145,3 +145,15 @@ class TestPrestamos(TransactionCase):
         self._prestamo(equipos=equipo)
         self._prestamo(equipos=equipo)
         self.assertEqual(equipo.veces_prestado, 2)
+
+    def test_mantenimiento(self):
+        equipo = self.equipos[0]
+        equipo.action_mantenimiento()
+        self.assertEqual(equipo.estado, "mantenimiento")
+        equipo.action_disponible()
+        self.assertEqual(equipo.estado, "disponible")
+        prestamo = self._prestamo(equipos=equipo)
+        prestamo.action_prestar()
+        with self.assertRaises(UserError):
+            equipo.action_mantenimiento()
+        self.assertEqual(equipo.estado, "prestado")
