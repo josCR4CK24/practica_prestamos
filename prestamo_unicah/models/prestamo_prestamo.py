@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class PrestamoPrestamo(models.Model):
@@ -51,3 +52,56 @@ class PrestamoPrestamo(models.Model):
                 prestamo.dias_prestamo = dias
             else:
                 prestamo.dias_prestamo = 0
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        default_state = self.default_get(["state"]).get("state", "borrador")
+        if any(vals.get("state", default_state) != "borrador" for vals in vals_list):
+            raise UserError("Los préstamos se crean en borrador.")
+        return super().create(vals_list)
+
+    def _check_borrador(self):
+        self.lock_for_update()
+        if any(prestamo.state != "borrador" for prestamo in self):
+            raise UserError("Solo se pueden modificar préstamos en borrador.")
+
+    def write(self, vals):
+        if "state" in vals:
+            raise UserError("Use los botones del préstamo para cambiar su estado.")
+        if vals.keys() & {"name", "partner_id", "tipo_solicitante", "fecha_prestamo",
+                          "fecha_devolucion", "linea_ids"}:
+            self.check_access("write")
+            self._check_borrador()
+        return super().write(vals)
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_borrador(self):
+        self._check_borrador()
+
+    def _set_state(self, state):
+        return super().write({"state": state})
+
+    def action_prestar(self):
+        self.check_access("write")
+        self.lock_for_update()
+        for prestamo in self:
+            if prestamo.state != "borrador":
+                raise UserError("Solo se puede prestar un préstamo en borrador.")
+            if not prestamo.linea_ids:
+                raise UserError("Agregue al menos un equipo al préstamo.")
+            prestamo.linea_ids.equipo_id._set_estado_prestamo("prestado")
+            prestamo._set_state("prestado")
+            prestamo.message_post(
+                body=f"Se prestaron {prestamo.cantidad_equipos} equipo(s) "
+                     f"a {prestamo.partner_id.name}."
+            )
+
+    def action_devolver(self):
+        self.check_access("write")
+        self.lock_for_update()
+        for prestamo in self:
+            if prestamo.state not in ("prestado", "atrasado"):
+                raise UserError("Solo se puede devolver un préstamo activo.")
+            prestamo.linea_ids.equipo_id._set_estado_prestamo("disponible")
+            prestamo._set_state("devuelto")
+            prestamo.message_post(body="Los equipos fueron devueltos.")
