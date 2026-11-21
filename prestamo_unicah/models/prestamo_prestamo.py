@@ -135,3 +135,14 @@ class PrestamoPrestamo(models.Model):
                 raise ValidationError(
                     f"Un estudiante puede prestar equipos hasta por {DIAS_MAXIMOS_ESTUDIANTE} días."
                 )
+
+    def action_marcar_atrasado(self):
+        self.check_access("write")
+        self.lock_for_update()
+        for prestamo in self:
+            if prestamo.state != "prestado":
+                raise UserError("Solo se puede marcar atrasado un préstamo prestado.")
+            if prestamo.fecha_devolucion >= fields.Date.context_today(prestamo):
+                raise UserError("La fecha de devolución todavía no ha pasado.")
+            prestamo._set_state("atrasado")
+            prestamo.message_post(body="El préstamo se marcó como atrasado.")

@@ -25,6 +25,8 @@
                     <button name="action_devolver" string="Devolver" type="object"
                             class="btn-primary"
                             invisible="state not in ('prestado', 'atrasado')"/>
+                    <button name="action_marcar_atrasado" string="Marcar atrasado" type="object"
+                            invisible="state != 'prestado'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="borrador,prestado,devuelto"/>
                 </header>
@@ -91,4 +93,3 @@
               action="prestamo_prestamo_action"
               sequence="10"/>
 </odoo>
-

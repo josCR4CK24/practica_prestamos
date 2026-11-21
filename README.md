@@ -84,3 +84,9 @@ Usa `-i` en la instalación inicial y `-u` para cargar cambios en una instalaci�
 ## Resultados
 
 La instalación inicial y la actualización de `prestamo_unicah` cargaron en Odoo 20.0 sobre `practica_prestamos_db`. La suite ejecutó ocho pruebas con cero fallos y cero errores. Validó los tres modelos, la creación de equipos con un usuario interno, la carga XML, relaciones y cálculos, el flujo y el chatter, cinco casos inválidos, el caso docente y la configuración de las vistas y búsquedas.
+
+En el navegador se creó el micrófono `AUD-002` y se prestaron y devolvieron dos equipos en **Clase de Redes**. Se verificaron el chatter, el historial del contacto, el kanban con cinco equipos, los dos filtros y las dos agrupaciones.
+
+## Retos
+
+- **Marcar atrasado.** Un préstamo en Prestado se puede marcar Atrasado cuando ya pasó la fecha de devolución. El chatter conserva el cambio y los equipos permanecen prestados hasta que se devuelvan.

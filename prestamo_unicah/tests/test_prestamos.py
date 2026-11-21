@@ -1,10 +1,12 @@
 from ast import literal_eval
 from datetime import date, timedelta
 
+from unittest.mock import patch
+
 from lxml import etree
 from psycopg2 import IntegrityError
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
@@ -120,3 +122,19 @@ class TestPrestamos(TransactionCase):
         self.assertEqual(etree.fromstring(kanban["arch"]).get("default_group_by"), "estado")
         contacto = self.contacto.get_view(view_type="form")
         self.assertTrue(etree.fromstring(contacto["arch"]).xpath("//field[@name='prestamo_ids'][@readonly='1']"))
+
+    def test_marcar_atrasado(self):
+        prestamo = self._prestamo(equipos=self.equipos[:1])
+        with self.assertRaises(UserError):
+            prestamo.action_marcar_atrasado()
+        prestamo.action_prestar()
+        with patch.object(fields.Date, "context_today", return_value=prestamo.fecha_devolucion):
+            with self.assertRaisesRegex(UserError, "todavía no ha pasado"):
+                prestamo.action_marcar_atrasado()
+        with patch.object(fields.Date, "context_today", return_value=prestamo.fecha_devolucion + timedelta(days=1)):
+            prestamo.action_marcar_atrasado()
+        self.assertEqual(prestamo.state, "atrasado")
+        self.assertEqual(self.equipos[0].estado, "prestado")
+        self.assertTrue(any("se marcó como atrasado" in m.body for m in prestamo.message_ids if m.body))
+        prestamo.action_devolver()
+        self.assertEqual(self.equipos[0].estado, "disponible")
