@@ -138,3 +138,10 @@ class TestPrestamos(TransactionCase):
         self.assertTrue(any("se marcó como atrasado" in m.body for m in prestamo.message_ids if m.body))
         prestamo.action_devolver()
         self.assertEqual(self.equipos[0].estado, "disponible")
+
+    def test_veces_prestado(self):
+        equipo = self.Equipo.create({"name": "Equipo para contar", "codigo": "CNT-001"})
+        self.assertEqual(equipo.veces_prestado, 0)
+        self._prestamo(equipos=equipo)
+        self._prestamo(equipos=equipo)
+        self.assertEqual(equipo.veces_prestado, 2)

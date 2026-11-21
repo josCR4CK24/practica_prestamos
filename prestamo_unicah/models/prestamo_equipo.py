@@ -32,6 +32,18 @@ class PrestamoEquipo(models.Model):
     notas = fields.Text(string="Notas")
     active = fields.Boolean(string="Activo", default=True)
 
+    linea_ids = fields.One2many("prestamo.linea", "equipo_id", string="Líneas de préstamo")
+    veces_prestado = fields.Integer(string="Veces prestado", compute="_compute_veces_prestado")
+
+    @api.depends("linea_ids")
+    def _compute_veces_prestado(self):
+        resultados = self.env["prestamo.linea"]._read_group(
+            [("equipo_id", "in", self.ids)], ["equipo_id"], ["__count"]
+        )
+        cantidades = {equipo.id: cantidad for equipo, cantidad in resultados}
+        for equipo in self:
+            equipo.veces_prestado = cantidades.get(equipo.id, 0)
+
     @api.model_create_multi
     def create(self, vals_list):
         default_estado = self.default_get(["estado"]).get("estado", "disponible")
