@@ -28,6 +28,7 @@ $opciones = @(
 ```
 
 Usa `-i` en la instalación inicial y `-u` para cargar cambios en una instalación existente. Abre [Odoo local](http://127.0.0.1:8078/odoo?db=practica_prestamos_db) e inicia sesión con un usuario interno.
+Como usuario: admin y contraseña: admin
 
 Verificación
 
