@@ -5,6 +5,11 @@ class PrestamoLinea(models.Model):
     _name = "prestamo.linea"
     _description = "Equipo del préstamo"
 
+    _equipo_unico = models.Constraint(
+        "UNIQUE(prestamo_id, equipo_id)",
+        "Un equipo no puede aparecer dos veces en el mismo préstamo.",
+    )
+
     prestamo_id = fields.Many2one(
         "prestamo.prestamo", string="Préstamo", required=True, ondelete="cascade"
     )
